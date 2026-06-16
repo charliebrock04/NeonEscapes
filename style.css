@@ -1,0 +1,1263 @@
+/*
+  style.css  [MODIFIED v3 — world progression]
+  =============================================
+  Changes from v2:
+    — All v1 and v2 rules are UNCHANGED (no regressions).
+    — New rules appended at the bottom under clearly labelled sections:
+        · --world-accent CSS variable (updated per-world by JS)
+        · In-game navigation buttons (#ingame-nav)
+        · World select screen and cards
+        · Difficulty badges (.diff-easy / medium / hard / expert / nightmare)
+        · World HUD indicator
+        · Game-over navigation row
+        · Shard multiplier text on game-over screen
+
+  v2 additions (still present, unchanged):
+        · Shard HUD counter
+        · Menu stats bar
+        · Secondary buttons (SHOP / STATS)
+        · Shop + upgrade cards
+        · Level dot indicators
+        · Stats screen list
+        · Game-over shards-earned row colour
+
+  Connects to: index.html (all selectors target elements defined there)
+*/
+
+/* ─────────────────────────────────────────────
+   Custom Properties (design tokens)
+───────────────────────────────────────────── */
+:root {
+  --clr-bg:           #05050f;
+  --clr-primary:      #00ffff;
+  --clr-danger:       #ff0066;
+  --clr-accent:       #ffaa00;
+  --clr-shard:        #00ffcc;   /* NEW: data-shard cyan-green */
+  --clr-surface:      rgba(0, 0, 0, 0.65);
+  --clr-border:       rgba(0, 255, 255, 0.25);
+  --font-main:        'Courier New', Courier, monospace;
+  --glow-primary:     0 0 8px #00ffff, 0 0 20px #00ffff55;
+  --glow-danger:      0 0 8px #ff0066, 0 0 20px #ff006655;
+  --glow-shard:       0 0 8px #00ffcc, 0 0 20px rgba(0,255,204,0.4);
+  --transition-fast:  0.15s ease;
+}
+
+/* ─────────────────────────────────────────────
+   Reset & Base
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--clr-bg);
+  font-family: var(--font-main);
+  color: var(--clr-primary);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+}
+
+/* ─────────────────────────────────────────────
+   Game Container & Canvas
+───────────────────────────────────────────── */
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─────────────────────────────────────────────
+   HUD — Score Overlay (v1, unchanged)
+───────────────────────────────────────────── */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#score-display,
+#best-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.hud-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  opacity: 0.6;
+}
+
+.hud-value {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: var(--glow-primary);
+}
+
+/* ─────────────────────────────────────────────
+   Screens (v1 base, unchanged)
+───────────────────────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 15, 0.82);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+  transition: opacity var(--transition-fast);
+}
+
+.screen.hidden {
+  display: none;
+}
+
+.screen-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  text-align: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+/* ─────────────────────────────────────────────
+   Neon Title (v1, unchanged)
+───────────────────────────────────────────── */
+.neon-title {
+  font-size: clamp(42px, 10vw, 72px);
+  font-weight: 900;
+  letter-spacing: 6px;
+  line-height: 1.0;
+  color: var(--clr-primary);
+  text-shadow: var(--glow-primary);
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+.neon-title.danger {
+  color: var(--clr-danger);
+  text-shadow: var(--glow-danger);
+  animation: titlePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.80; }
+}
+
+/* ─────────────────────────────────────────────
+   Subtitle (v1, unchanged)
+───────────────────────────────────────────── */
+.subtitle {
+  font-size: 14px;
+  letter-spacing: 3px;
+  opacity: 0.55;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────
+   Primary Neon Button (v1, unchanged)
+───────────────────────────────────────────── */
+.neon-btn {
+  background: transparent;
+  border: 2px solid var(--clr-primary);
+  color: var(--clr-primary);
+  font-family: var(--font-main);
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  padding: 14px 36px;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  box-shadow: var(--glow-primary), inset 0 0 12px rgba(0,255,255,0.08);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  width: 100%;
+}
+
+.neon-btn:hover,
+.neon-btn:focus {
+  background: rgba(0, 255, 255, 0.12);
+  box-shadow: 0 0 12px #00ffff, 0 0 30px #00ffff88, inset 0 0 18px rgba(0,255,255,0.12);
+  outline: none;
+}
+
+.neon-btn:active {
+  background: rgba(0, 255, 255, 0.22);
+  transform: scale(0.97);
+}
+
+/* ─────────────────────────────────────────────
+   Score Block — Game Over (v1, unchanged)
+───────────────────────────────────────────── */
+.score-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid var(--clr-border);
+  border-radius: 6px;
+  padding: 18px 28px;
+  background: var(--clr-surface);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.score-label {
+  font-size: 12px;
+  letter-spacing: 3px;
+  opacity: 0.55;
+}
+
+.score-val {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: var(--glow-primary);
+}
+
+.score-val.accent {
+  color: var(--clr-accent);
+  text-shadow: 0 0 8px var(--clr-accent), 0 0 20px rgba(255,170,0,0.4);
+}
+
+/* ─────────────────────────────────────────────
+   Controls Hint (v1, unchanged)
+───────────────────────────────────────────── */
+.controls-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0.45;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hint-key {
+  display: inline-block;
+  border: 1px solid rgba(0,255,255,0.4);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 11px;
+  min-width: 48px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.hint-mobile {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .controls-hint .hint-row:not(.hint-mobile) { display: none; }
+  .hint-mobile { display: flex; }
+}
+
+/* ─────────────────────────────────────────────
+   Safe Area (iPhone notch / home indicator)
+───────────────────────────────────────────── */
+@supports (padding: env(safe-area-inset-top)) {
+  #hud {
+    padding-top: calc(14px + env(safe-area-inset-top));
+    padding-left: calc(18px + env(safe-area-inset-left));
+    padding-right: calc(18px + env(safe-area-inset-right));
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ▼▼▼  NEW IN V2  ▼▼▼
+   All rules below are additions — nothing above
+   was changed.
+═══════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   HUD: Shard Counter  [NEW]
+───────────────────────────────────────────── */
+#shard-hud-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.shard-label {
+  color: var(--clr-shard);
+  opacity: 0.7;
+}
+
+.shard-value {
+  color: var(--clr-shard);
+  text-shadow: var(--glow-shard);
+}
+
+/* ─────────────────────────────────────────────
+   Main Menu: Stats Bar  [NEW]
+   Shows live currency + best score at a glance.
+───────────────────────────────────────────── */
+.menu-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(0, 255, 204, 0.05);
+  border: 1px solid rgba(0, 255, 204, 0.2);
+  border-radius: 6px;
+}
+
+.menu-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-shard-icon {
+  color: var(--clr-shard);
+  text-shadow: var(--glow-shard);
+  font-size: 14px;
+}
+
+.menu-stat-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.55;
+}
+
+.menu-stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--clr-primary);
+  text-shadow: var(--glow-primary);
+}
+
+.menu-stat-sep {
+  opacity: 0.25;
+  font-size: 18px;
+}
+
+/* ─────────────────────────────────────────────
+   Main Menu: Secondary Buttons Row  [NEW]
+   SHOP and STATS sit side by side below PLAY.
+───────────────────────────────────────────── */
+.menu-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.neon-btn-secondary {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  color: rgba(0, 255, 255, 0.65);
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  padding: 11px 0;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.neon-btn-secondary:hover,
+.neon-btn-secondary:focus {
+  border-color: var(--clr-primary);
+  color: var(--clr-primary);
+  box-shadow: var(--glow-primary);
+  outline: none;
+}
+
+.neon-btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* ─────────────────────────────────────────────
+   Game Over: Shards Earned Row  [NEW]
+───────────────────────────────────────────── */
+.score-val.shard-earned {
+  color: var(--clr-shard);
+  text-shadow: var(--glow-shard);
+  font-size: 22px;
+}
+
+/* ─────────────────────────────────────────────
+   Shop Screen  [NEW]
+───────────────────────────────────────────── */
+.shop-inner {
+  max-width: 390px;
+  gap: 16px;
+  /* Allow scrolling if upgrade list is too tall on small phones */
+  max-height: 100vh;
+  overflow-y: auto;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.shop-title {
+  font-size: clamp(28px, 7vw, 48px);
+  letter-spacing: 5px;
+  animation: none;   /* suppress titlePulse in shop context */
+}
+
+.shop-balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--clr-shard);
+  text-shadow: var(--glow-shard);
+}
+
+.shop-shard-icon {
+  font-size: 14px;
+}
+
+/* ─────────────────────────────────────────────
+   Upgrade List & Cards  [NEW]
+───────────────────────────────────────────── */
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.upgrade-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 8px;
+  text-align: left;
+  transition: border-color var(--transition-fast);
+}
+
+.upgrade-card:hover {
+  border-color: rgba(0, 255, 255, 0.35);
+}
+
+.upgrade-icon {
+  font-size: 22px;
+  color: var(--clr-primary);
+  text-shadow: var(--glow-primary);
+  min-width: 28px;
+  text-align: center;
+}
+
+.upgrade-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upgrade-name {
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--clr-primary);
+}
+
+.upgrade-perk {
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.5;
+  min-height: 13px;
+}
+
+/* Level dot indicators */
+.upgrade-levels {
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.lvl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.lvl-dot.filled {
+  background: var(--clr-primary);
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 5px var(--clr-primary);
+}
+
+/* Right-side cost + button column */
+.upgrade-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 56px;
+}
+
+.upgrade-cost {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--clr-shard);
+  letter-spacing: 1px;
+}
+
+.cost-shard {
+  font-size: 10px;
+}
+
+.upgrade-btn {
+  background: transparent;
+  border: 1px solid var(--clr-primary);
+  color: var(--clr-primary);
+  font-family: var(--font-main);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 5px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  width: 100%;
+}
+
+.upgrade-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 255, 0.12);
+  box-shadow: var(--glow-primary);
+}
+
+.upgrade-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.upgrade-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(0, 255, 255, 0.2);
+}
+
+/* ─────────────────────────────────────────────
+   Stats Screen  [NEW]
+───────────────────────────────────────────── */
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid var(--clr-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.07);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.5;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--clr-primary);
+  text-shadow: var(--glow-primary);
+}
+
+.stat-value.shard-stat {
+  color: var(--clr-shard);
+  text-shadow: var(--glow-shard);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v3 — World Progression
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── World accent CSS variable ──────────────────────────────────────────────
+   Set on :root by JS (_applyWorldTheme) whenever a world is loaded.
+   Defaults to World 1 cyan so the initial render is correct before JS runs. */
+:root {
+  --world-accent: #00ffff;
+}
+
+/* ── World indicator in HUD ─────────────────────────────────────────────── */
+#world-hud-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.world-value {
+  color: var(--world-accent);
+  text-shadow: 0 0 8px var(--world-accent);
+  transition: color 0.4s, text-shadow 0.4s;
+}
+
+/* ── In-Game Navigation ─────────────────────────────────────────────────── */
+#ingame-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 12px;
+  z-index: 30;
+  /* Transparent to touches except the buttons themselves */
+  pointer-events: none;
+}
+
+.ingame-btn {
+  pointer-events: all;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  padding: 7px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.ingame-btn:active {
+  border-color: var(--world-accent);
+  color: var(--world-accent);
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* ── World Select Screen ────────────────────────────────────────────────── */
+.world-select-inner {
+  max-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 8px 24px;
+  gap: 12px;
+}
+
+#world-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 16px;
+}
+
+/* ── World Card ─────────────────────────────────────────────────────────── */
+.world-card {
+  --card-accent: #555;          /* overridden inline per card */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: default;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  /* border-color set inline by JS from world theme */
+}
+
+.world-card.unlocked {
+  cursor: pointer;
+}
+
+.world-card.unlocked:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.world-card.unlocked:active {
+  transform: scale(0.97);
+}
+
+.world-card.locked {
+  opacity: 0.48;
+}
+
+/* Currently selected world gets a subtle indicator */
+.world-card.current-world .world-name::before {
+  content: '▶  ';
+  color: var(--card-accent);
+  font-size: 0.75em;
+}
+
+/* ── Card Header ────────────────────────────────────────────────────────── */
+.world-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.world-number {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.world-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  flex: 1;
+}
+
+.world-mult {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--card-accent);
+  flex-shrink: 0;
+}
+
+.world-card.locked .world-mult {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Card Body ──────────────────────────────────────────────────────────── */
+.world-card-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.world-subtitle {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.03em;
+  font-style: italic;
+}
+
+.world-lock {
+  font-size: 0.67rem;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.03em;
+}
+
+/* ── Difficulty Badges ──────────────────────────────────────────────────── */
+.world-diff {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.diff-easy {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.35);
+}
+
+.diff-medium {
+  background: rgba(255, 0, 255, 0.15);
+  color: #ff88ff;
+  border: 1px solid rgba(255, 0, 255, 0.35);
+}
+
+.diff-hard {
+  background: rgba(255, 200, 0, 0.15);
+  color: #ffdd44;
+  border: 1px solid rgba(255, 200, 0, 0.35);
+}
+
+.diff-expert {
+  background: rgba(255, 68, 0, 0.15);
+  color: #ff7744;
+  border: 1px solid rgba(255, 68, 0, 0.35);
+}
+
+.diff-nightmare {
+  background: rgba(0, 255, 102, 0.12);
+  color: #00ff66;
+  border: 1px solid rgba(0, 255, 102, 0.35);
+  /* Matrix-green distinguishes it from Easy's lighter teal */
+  text-shadow: 0 0 6px rgba(0, 255, 102, 0.6);
+}
+
+/* ── Game-Over Navigation Row ───────────────────────────────────────────── */
+.gameover-nav {
+  margin-top: 8px;
+}
+
+/* ── Shard Multiplier on Game-Over Screen ───────────────────────────────── */
+#gameover-multiplier-row .score-val {
+  font-size: 0.82em;
+  opacity: 0.9;
+}
+
+/* =============================================================================
+   v4 — Long-Term Progression  [NEW v4]
+   All rules appended; no v3 rules modified.
+============================================================================= */
+
+/* ── Quantum Fragment (QF) Currency Display ─────────────────────────────── */
+.qf-label {
+  color: #cc44ff;
+}
+.qf-value {
+  color: #cc44ff;
+  text-shadow: 0 0 8px rgba(204, 68, 255, 0.7);
+}
+
+/* ── Screen Subtitle ─────────────────────────────────────────────────────── */
+.screen-subtitle {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  opacity: 0.55;
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+/* ─────────────────────────────────────────────
+   Daily Reward Screen  [NEW v4]
+───────────────────────────────────────────── */
+
+.daily-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.daily-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  position: relative;
+  min-height: 68px;
+  transition: all 0.2s;
+}
+
+.daily-card.today {
+  border-color: var(--world-accent);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
+}
+
+.daily-card.claimed {
+  opacity: 0.45;
+  border-color: rgba(0, 255, 255, 0.1);
+}
+
+.daily-card-label {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.daily-card-content {
+  font-size: 10px;
+  color: var(--world-accent);
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-card-check {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 10px;
+  color: #00ff88;
+}
+
+/* ─────────────────────────────────────────────
+   Missions Screen  [NEW v4]
+───────────────────────────────────────────── */
+
+.missions-inner {
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.missions-section {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  opacity: 0.5;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+}
+
+.mission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.mission-card {
+  background: rgba(0, 255, 255, 0.04);
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: border-color 0.2s;
+}
+
+.mission-card.completed {
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.mission-card.claimed {
+  opacity: 0.42;
+}
+
+.mission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.mission-label {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  font-weight: bold;
+}
+
+.mission-reward {
+  font-size: 10px;
+  color: #00ffcc;
+  letter-spacing: 1px;
+}
+
+.mission-desc {
+  font-size: 10px;
+  opacity: 0.55;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.mission-progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.mission-progress-fill {
+  height: 100%;
+  background: var(--world-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.mission-progress-text {
+  font-size: 9px;
+  opacity: 0.45;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.mission-claim-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 10px;
+}
+
+.mission-claimed-label {
+  font-size: 10px;
+  color: #00ff88;
+  letter-spacing: 2px;
+  text-align: center;
+  padding-top: 4px;
+}
+
+/* ─────────────────────────────────────────────
+   Skin Select Screen  [NEW v4]
+───────────────────────────────────────────── */
+
+.skins-inner {
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.skin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.skin-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 255, 255, 0.04);
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.skin-card.equipped {
+  border-color: var(--world-accent);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.18);
+}
+
+.skin-card.locked {
+  opacity: 0.55;
+}
+
+.skin-preview {
+  width: 38px;
+  height: 56px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skin-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.skin-name {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.skin-desc {
+  font-size: 10px;
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.skin-status.equipped-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--world-accent);
+}
+
+.skin-equip-btn,
+.skin-unlock-btn {
+  font-size: 10px;
+  padding: 5px 10px;
+  width: auto;
+}
+
+/* ─────────────────────────────────────────────
+   Relic Equip Screen  [NEW v4]
+───────────────────────────────────────────── */
+
+.relics-inner {
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Equipped slots summary at top */
+.relic-slots {
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.relic-slot {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  opacity: 0.5;
+}
+
+.relic-slot.filled {
+  opacity: 0.9;
+  color: var(--world-accent);
+}
+
+.relic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Rarity color variables */
+.relic-card {
+  background: rgba(0, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 12px 14px;
+  border-left: 4px solid;
+  transition: opacity 0.2s;
+}
+
+.relic-card.locked {
+  opacity: 0.45;
+}
+
+/* Rarity border colors */
+.rarity-common    { border-color: #aaaaaa; }
+.rarity-rare      { border-color: #4488ff; }
+.rarity-epic      { border-color: #aa44ff; }
+.rarity-legendary { border-color: #ffaa00; }
+.rarity-mythic    { border-color: #ff44aa; }
+
+.relic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.relic-name {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  font-weight: bold;
+}
+
+.rarity-common-label    { color: #aaaaaa; font-size: 9px; letter-spacing: 1px; }
+.rarity-rare-label      { color: #4488ff; font-size: 9px; letter-spacing: 1px; }
+.rarity-epic-label      { color: #aa44ff; font-size: 9px; letter-spacing: 1px; }
+.rarity-legendary-label { color: #ffaa00; font-size: 9px; letter-spacing: 1px; }
+.rarity-mythic-label    { color: #ff44aa; font-size: 9px; letter-spacing: 1px; }
+
+.relic-desc {
+  font-size: 10px;
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.relic-slot-badge {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--world-accent);
+  margin-bottom: 6px;
+}
+
+.relic-buy-btn,
+.relic-equip-btn,
+.relic-unequip-btn {
+  font-size: 10px;
+  padding: 5px 10px;
+  width: auto;
+}
+
+.relic-future,
+.relic-no-slot {
+  font-size: 9px;
+  opacity: 0.4;
+  letter-spacing: 1.5px;
+}
+
+/* Third menu row — three small buttons */
+.menu-row:has(#missions-btn) {
+  gap: 6px;
+}
+
+.menu-row:has(#missions-btn) .neon-btn-secondary {
+  flex: 1;
+  font-size: 10px;
+  padding: 8px 4px;
+  letter-spacing: 1px;
+}

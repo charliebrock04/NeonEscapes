@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    index.html  [MODIFIED v4 — long-term progression]
+    ==================================================
+    Changes from v3:
+      1. Main menu: added Quantum Fragment display (#menu-qf), added
+         MISSIONS / SKINS / RELICS buttons in a second menu row.
+      2. #daily-reward-screen (NEW): 7-day reward grid + claim button.
+      3. #missions-screen (NEW): daily missions list + achievement list.
+      4. #skins-screen (NEW): scrollable skin card grid.
+      5. #relics-screen (NEW): relic list with slots display.
+      6. Script order: 5 new systems added between worldSystem.js and gameManager.js.
+
+    Unchanged: canvas, #ingame-nav, #hud, #world-select-screen,
+               #gameover-screen, #shop-screen, #stats-screen.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Neon Escape</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-container">
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- ─── In-Game Navigation [v3] ──────────────────────────────────────── -->
+    <div id="ingame-nav" class="hidden">
+      <button id="ingame-menu-btn" class="ingame-btn">☰ MENU</button>
+      <button id="ingame-shop-btn" class="ingame-btn">◆ SHOP</button>
+    </div>
+
+    <!-- ─── HUD ──────────────────────────────────────────────────────────── -->
+    <div id="hud" class="hidden">
+      <div id="score-display">
+        <span class="hud-label">SCORE</span>
+        <span id="score" class="hud-value">0</span>
+      </div>
+
+      <div id="shard-hud-display">
+        <span class="hud-label shard-label">◆ SHARDS</span>
+        <span id="hud-shards" class="hud-value shard-value">0</span>
+      </div>
+
+      <div id="world-hud-display">
+        <span class="hud-label">WORLD</span>
+        <span id="hud-world" class="hud-value world-value">W1</span>
+      </div>
+
+      <div id="best-display">
+        <span class="hud-label">BEST</span>
+        <span id="best" class="hud-value">0</span>
+      </div>
+    </div>
+
+    <!-- ─── Start / Main Menu ────────────────────────────────────────────── -->
+    <div id="start-screen" class="screen">
+      <div class="screen-inner">
+        <h1 class="neon-title">NEON<br/>ESCAPE</h1>
+
+        <!-- [MODIFIED v4] Added QF display -->
+        <div class="menu-stats-bar">
+          <div class="menu-stat">
+            <span class="menu-shard-icon">◆</span>
+            <span id="menu-currency" class="menu-stat-value">0</span>
+          </div>
+          <div class="menu-stat-sep">|</div>
+          <div class="menu-stat">
+            <span class="menu-stat-label qf-label">◉ QF</span>
+            <span id="menu-qf" class="menu-stat-value qf-value">0</span>
+          </div>
+          <div class="menu-stat-sep">|</div>
+          <div class="menu-stat">
+            <span class="menu-stat-label">BEST</span>
+            <span id="menu-best" class="menu-stat-value">0</span>
+          </div>
+        </div>
+
+        <button id="start-btn" class="neon-btn">PLAY</button>
+
+        <!-- Row 1: Shop + Stats (unchanged) -->
+        <div class="menu-row">
+          <button id="shop-btn" class="neon-btn-secondary">SHOP</button>
+          <button id="stats-btn" class="neon-btn-secondary">STATS</button>
+        </div>
+
+        <!-- [NEW v4] Row 2: Missions, Skins, Relics -->
+        <div class="menu-row">
+          <button id="missions-btn" class="neon-btn-secondary">MISSIONS</button>
+          <button id="skins-btn" class="neon-btn-secondary">SKINS</button>
+          <button id="relics-btn" class="neon-btn-secondary">RELICS</button>
+        </div>
+
+        <div class="controls-hint">
+          <div class="hint-row"><span class="hint-key">← →</span><span>Change Lane</span></div>
+          <div class="hint-row"><span class="hint-key">↑</span><span>Jump</span></div>
+          <div class="hint-row"><span class="hint-key">↓</span><span>Slide</span></div>
+          <div class="hint-row hint-mobile"><span class="hint-key">SWIPE</span><span>to control</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── World Select Screen [v3] ─────────────────────────────────────── -->
+    <div id="world-select-screen" class="screen hidden">
+      <div class="screen-inner world-select-inner">
+        <h2 class="neon-title">SELECT WORLD</h2>
+        <div id="world-list" class="world-list"></div>
+        <button id="world-select-back-btn" class="neon-btn-secondary">← BACK</button>
+      </div>
+    </div>
+
+    <!-- ─── Daily Reward Screen [NEW v4] ─────────────────────────────────── -->
+    <!--
+      Shown automatically on IDLE entry if there is an unclaimed reward.
+      #daily-reward-grid is populated by GameManager._buildDailyRewardUI().
+      Streak shown as 7 cards; today's card highlighted; claimed cards checked.
+    -->
+    <div id="daily-reward-screen" class="screen hidden">
+      <div class="screen-inner">
+        <h2 class="neon-title">DAILY REWARD</h2>
+        <p class="screen-subtitle">Log in every day to keep your streak!</p>
+
+        <div id="daily-reward-grid" class="daily-grid"></div>
+
+        <button id="daily-reward-claim-btn" class="neon-btn">CLAIM</button>
+        <button id="daily-reward-close-btn" class="neon-btn-secondary">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- ─── Missions Screen [NEW v4] ─────────────────────────────────────── -->
+    <!--
+      Two sections: daily (3 missions, reset each day) and achievements (permanent).
+      Each mission card has a progress bar + CLAIM button when completable.
+      Populated by GameManager._buildMissionUI().
+    -->
+    <div id="missions-screen" class="screen hidden">
+      <div class="screen-inner missions-inner">
+        <h2 class="neon-title">MISSIONS</h2>
+
+        <div class="missions-section">
+          <h3 class="section-label">DAILY MISSIONS</h3>
+          <div id="daily-mission-list" class="mission-list"></div>
+        </div>
+
+        <div class="missions-section">
+          <h3 class="section-label">ACHIEVEMENTS</h3>
+          <div id="achievement-list" class="mission-list"></div>
+        </div>
+
+        <button id="missions-close-btn" class="neon-btn">← BACK</button>
+      </div>
+    </div>
+
+    <!-- ─── Skin Select Screen [NEW v4] ──────────────────────────────────── -->
+    <!--
+      Lists all 5 skins. Owned skins show EQUIP button; locked show UNLOCK cost.
+      Currently equipped skin shows EQUIPPED badge.
+      Populated by GameManager._buildSkinUI().
+    -->
+    <div id="skins-screen" class="screen hidden">
+      <div class="screen-inner skins-inner">
+        <h2 class="neon-title">SKINS</h2>
+        <div id="skin-list" class="skin-list"></div>
+        <button id="skins-close-btn" class="neon-btn">← BACK</button>
+      </div>
+    </div>
+
+    <!-- ─── Relic Equip Screen [NEW v4] ──────────────────────────────────── -->
+    <!--
+      Shows equipped relic slots summary + all relics (owned/locked).
+      Relics can be purchased with shards, equipped into up to 3 slots.
+      Populated by GameManager._buildRelicUI().
+    -->
+    <div id="relics-screen" class="screen hidden">
+      <div class="screen-inner relics-inner">
+        <h2 class="neon-title">RELICS</h2>
+
+        <!-- Current equipped slots -->
+        <div id="relic-slots-display" class="relic-slots"></div>
+
+        <!-- All relics -->
+        <div id="relic-list" class="relic-list"></div>
+
+        <button id="relics-close-btn" class="neon-btn">← BACK</button>
+      </div>
+    </div>
+
+    <!-- ─── Game Over ────────────────────────────────────────────────────── -->
+    <div id="gameover-screen" class="screen hidden">
+      <div class="screen-inner">
+        <h2 class="neon-title danger">GAME<br/>OVER</h2>
+
+        <div class="score-block">
+          <div class="score-row">
+            <span class="score-label">SCORE</span>
+            <span id="final-score" class="score-val">0</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">BEST</span>
+            <span id="final-best" class="score-val accent">0</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">SHARDS</span>
+            <span class="score-val shard-earned">+<span id="gameover-shards">0</span> ◆</span>
+          </div>
+          <div class="score-row hidden" id="gameover-multiplier-row">
+            <span class="score-label">BONUS</span>
+            <span id="gameover-multiplier-text" class="score-val shard-earned"></span>
+          </div>
+        </div>
+
+        <button id="restart-btn" class="neon-btn">PLAY AGAIN</button>
+
+        <div class="menu-row gameover-nav">
+          <button id="gameover-world-btn" class="neon-btn-secondary">⊞ WORLDS</button>
+          <button id="gameover-menu-btn"  class="neon-btn-secondary">⌂ MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Shop Screen ──────────────────────────────────────────────────── -->
+    <div id="shop-screen" class="screen hidden">
+      <div class="screen-inner shop-inner">
+
+        <div class="shop-header">
+          <h2 class="neon-title shop-title">SHOP</h2>
+          <div class="shop-balance">
+            <span class="shop-shard-icon">◆</span>
+            <span id="shop-balance">0</span>
+          </div>
+        </div>
+
+        <div class="upgrade-list">
+
+          <div class="upgrade-card">
+            <div class="upgrade-icon">⦿</div>
+            <div class="upgrade-info">
+              <div class="upgrade-name">Data Magnet</div>
+              <div class="upgrade-perk" id="perk-magnet">Attract nearby shards</div>
+              <div class="upgrade-levels" id="levels-magnet">
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+              </div>
+            </div>
+            <div class="upgrade-action">
+              <div class="upgrade-cost">
+                <span class="cost-shard">◆</span>
+                <span class="cost-val" id="cost-magnet">50</span>
+              </div>
+              <button class="upgrade-btn" data-upgrade="magnet">BUY</button>
+            </div>
+          </div>
+
+          <div class="upgrade-card">
+            <div class="upgrade-icon">⚡</div>
+            <div class="upgrade-info">
+              <div class="upgrade-name">Overdrive Core</div>
+              <div class="upgrade-perk" id="perk-startingSpeed">Boost starting speed</div>
+              <div class="upgrade-levels" id="levels-startingSpeed">
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+              </div>
+            </div>
+            <div class="upgrade-action">
+              <div class="upgrade-cost">
+                <span class="cost-shard">◆</span>
+                <span class="cost-val" id="cost-startingSpeed">75</span>
+              </div>
+              <button class="upgrade-btn" data-upgrade="startingSpeed">BUY</button>
+            </div>
+          </div>
+
+          <div class="upgrade-card">
+            <div class="upgrade-icon">◈</div>
+            <div class="upgrade-info">
+              <div class="upgrade-name">Phase Shield</div>
+              <div class="upgrade-perk" id="perk-shieldDuration">Invincibility at run start</div>
+              <div class="upgrade-levels" id="levels-shieldDuration">
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+                <span class="lvl-dot"></span>
+              </div>
+            </div>
+            <div class="upgrade-action">
+              <div class="upgrade-cost">
+                <span class="cost-shard">◆</span>
+                <span class="cost-val" id="cost-shieldDuration">100</span>
+              </div>
+              <button class="upgrade-btn" data-upgrade="shieldDuration">BUY</button>
+            </div>
+          </div>
+
+        </div>
+
+        <button id="shop-close-btn" class="neon-btn">← BACK</button>
+      </div>
+    </div>
+
+    <!-- ─── Stats Screen ─────────────────────────────────────────────────── -->
+    <div id="stats-screen" class="screen hidden">
+      <div class="screen-inner">
+        <h2 class="neon-title">STATS</h2>
+
+        <div class="stats-list">
+          <div class="stat-item">
+            <span class="stat-label">BEST SCORE</span>
+            <span class="stat-value" id="stat-best">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">TOTAL DISTANCE</span>
+            <span class="stat-value" id="stat-distance">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">SHARDS COLLECTED</span>
+            <span class="stat-value shard-stat" id="stat-shards">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">RUNS PLAYED</span>
+            <span class="stat-value" id="stat-runs">0</span>
+          </div>
+        </div>
+
+        <button id="stats-close-btn" class="neon-btn">← BACK</button>
+      </div>
+    </div>
+
+  </div><!-- /#game-container -->
+
+  <!--
+    Script load order:
+      1.  saveSystem.js        — defines SaveSystem (no deps)
+      2.  input.js             — defines InputManager (no deps)
+      3.  player.js            — defines Player, LANE_COUNT, LANES
+      4.  obstacle.js          — uses LANE_COUNT
+      5.  shardManager.js      — uses LANE_COUNT
+      6.  worldSystem.js       — defines WorldSystem (no deps)
+      7.  missionSystem.js     — [NEW v4] uses SaveSystem
+      8.  powerupManager.js    — [NEW v4] uses LANE_COUNT, POWERUP_TYPE, POWERUP_DEF
+      9.  skinSystem.js        — [NEW v4] uses SaveSystem
+      10. relicSystem.js       — [NEW v4] uses SaveSystem
+      11. dailyRewardSystem.js — [NEW v4] uses SaveSystem, SkinSystem
+      12. gameManager.js       — uses all of the above
+      13. game.js              — bootstraps GameManager
+  -->
+  <script src="saveSystem.js"></script>
+  <script src="input.js"></script>
+  <script src="player.js"></script>
+  <script src="obstacle.js"></script>
+  <script src="shardManager.js"></script>
+  <script src="worldSystem.js"></script>
+  <script src="missionSystem.js"></script>
+  <script src="powerupManager.js"></script>
+  <script src="skinSystem.js"></script>
+  <script src="relicSystem.js"></script>
+  <script src="dailyRewardSystem.js"></script>
+  <script src="gameManager.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
