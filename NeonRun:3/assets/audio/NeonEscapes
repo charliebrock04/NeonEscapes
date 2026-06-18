@@ -1,0 +1,7 @@
+NeonEscape
+│
+├── assets
+│   └── audio
+│       ├── menu-music.mp3
+│       ├── gameplay-music.mp3
+│       └── boss-music.mp3
